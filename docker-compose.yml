@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=taskdb
+      - POSTGRES_USER=taskuser
+      - POSTGRES_PASSWORD=taskpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"   # AMQP (lo usa la app)
+      - "15672:15672" # UI de management (http://localhost:15672, guest/guest)
+
+volumes:
+  pg-data:
