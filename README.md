@@ -24,7 +24,7 @@ flowchart LR
 
 El mensaje de la cola lleva solo el `id` de la tarea, no el payload — el payload pesado vive en Postgres. Mensajes livianos y estado siempre consultable aunque el worker esté caído.
 
-Reintentos con backoff exponencial vía TTL + Dead Letter Exchange: si el worker falla, el mensaje va a `task.retry` con un TTL creciente (`2^intentos * 10s`); al expirar, vuelve a `task.queue` para reintentarse.
+Reintentos con backoff exponencial vía TTL + Dead Letter Exchange: si el worker falla, el mensaje va a `task.retry` con un TTL creciente (`2^intentos * 10s`); al expirar, vuelve a `task.queue` para reintentarse. Agotados los reintentos, la tarea pasa a `FAILED` (con el error guardado) y el mensaje se publica en `task.dlq`. `GET /tasks/failed` lista las tareas en ese estado.
 
 ## Cómo levantarlo
 
@@ -47,9 +47,9 @@ Proyecto en curso, construido objetivo por objetivo:
 
 - [x] **Objetivo 1** — API que encola tareas
 - [x] **Objetivo 2** — Worker que consume y procesa
-- [ ] **Objetivo 3** — Reintentos con backoff exponencial *(en curso)*
-- [ ] **Objetivo 4** — Dead Letter Queue
-- [ ] **Objetivo 5** — Colas de prioridad
+- [x] **Objetivo 3** — Reintentos con backoff exponencial
+- [x] **Objetivo 4** — Dead Letter Queue
+- [ ] **Objetivo 5** — Colas de prioridad *(en curso)*
 - [ ] **Objetivo 6** — Tareas programadas
 - [ ] **Objetivo 7** — Endpoint de consulta de estado
 - [ ] **Objetivo 8** — Dockerizar todo el sistema (API + worker + broker)

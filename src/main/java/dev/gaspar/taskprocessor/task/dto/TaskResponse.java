@@ -7,4 +7,4 @@ import dev.gaspar.taskprocessor.task.TaskStatus;
 import java.time.Instant;
 
 
-public record TaskResponse(UUID id, TaskStatus status, Instant createdAt){}
+public record TaskResponse(UUID id, TaskStatus status, Instant createdAt, String result){}

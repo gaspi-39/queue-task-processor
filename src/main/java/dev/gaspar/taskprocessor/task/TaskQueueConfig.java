@@ -10,9 +10,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class TaskQueueConfig {
     public static final String EXCHANGE_NAME = "task.exchange";
-    public static final String QUEUE_NAME = "task.queue";
     public static final String ROUTING_KEY = "task.created";
+    public static final String QUEUE_NAME = "task.queue";
     public static final String RETRY_QUEUE_NAME = "task.retry";
+    public static final String DLQ_QUEUE_NAME = "task.dlq";
     @Bean
     public DirectExchange createDirectExchange(){
         return new DirectExchange(EXCHANGE_NAME); 
@@ -20,6 +21,10 @@ public class TaskQueueConfig {
     @Bean
     public Queue createQueue(){
         return new Queue(QUEUE_NAME);
+    }
+    @Bean
+    public Queue createDlqQueue(){
+        return new Queue(DLQ_QUEUE_NAME);
     }
     @Bean
     public Queue createRetryQueue(){

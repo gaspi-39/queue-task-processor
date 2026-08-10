@@ -16,7 +16,7 @@ import java.util.Optional;
 public class TaskWorker {
     private final TaskRepository repository;
     private final TaskService service;
-    private static final int MAX_TRIES = 3;
+    private static final Integer MAX_TRIES = 3;
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskWorker.class);
 
     public TaskWorker(TaskRepository repository, TaskService service){
@@ -27,23 +27,31 @@ public class TaskWorker {
     public void reciveTask(String id, Message msg, Channel channel) throws IOException{
         UUID uuid = UUID.fromString(id);
         Optional<Task> task = repository.findById(uuid);
+
         if (!task.isEmpty()){
+
             Task task2 = task.get();
             task2.setProcessing();
             repository.save(task2);
+
             try {
                 String condition = "fail";
+
                 if (task2.getPayload().equals(condition)) {
                     throw new RuntimeException("task failed");
                 }
+
                 task2.setDone("task succesfully");
+
             } catch (RuntimeException e) {
+
                 task2.setTries(task2.getTries() + 1);
-                System.out.print("tries: " + task2.getTries());
-                if (task2.getTries() < this.MAX_TRIES) {
+                
+                if (task2.getTries() < MAX_TRIES) {
                     this.service.publishRetry(task2);
                 } else {
                     task2.setFailed(e.toString());
+                    this.service.publishDlq(task2);
                 }
             }
             repository.save(task2);

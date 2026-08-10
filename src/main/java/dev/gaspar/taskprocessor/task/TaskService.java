@@ -1,5 +1,6 @@
 package dev.gaspar.taskprocessor.task;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -21,14 +22,22 @@ public class TaskService {
         Task task = new Task(UUID.randomUUID(), Instant.now(), req.payload(), TaskStatus.PENDING, req.type());
         repository.save(task);
         rabbitTemplate.convertAndSend(TaskQueueConfig.EXCHANGE_NAME, TaskQueueConfig.ROUTING_KEY, task.getId().toString());
-        return new TaskResponse(task.getId(), task.getStatus(), task.getCreatedAt());
+        return new TaskResponse(task.getId(), task.getStatus(), task.getCreatedAt(), task.getResult());
     }
     public void publishRetry (Task task) {
         int ttlMs = (1 << task.getTries()) * 10_000;
         rabbitTemplate.convertAndSend("", TaskQueueConfig.RETRY_QUEUE_NAME, task.getId().toString(), message -> {
         message.getMessageProperties().setExpiration(String.valueOf(ttlMs));
         return message;
-});
+        });
+    }
+    public void publishDlq(Task task){
+        rabbitTemplate.convertAndSend("", TaskQueueConfig.DLQ_QUEUE_NAME, task.getId().toString());
+    }
+    public List<TaskResponse> getByStatus (TaskStatus status){
+        List<Task> list = this.repository.findByStatus(status);
+        List<TaskResponse> responseList = list.stream().map(task -> new TaskResponse(task.getId(), task.getStatus(), task.getCreatedAt(), task.getResult())).toList();
+        return responseList;
     }
 
 }
