@@ -26,6 +26,8 @@ El mensaje de la cola lleva solo el `id` de la tarea, no el payload — el paylo
 
 Reintentos con backoff exponencial vía TTL + Dead Letter Exchange: si el worker falla, el mensaje va a `task.retry` con un TTL creciente (`2^intentos * 10s`); al expirar, vuelve a `task.queue` para reintentarse. Agotados los reintentos, la tarea pasa a `FAILED` (con el error guardado) y el mensaje se publica en `task.dlq`. `GET /tasks/failed` lista las tareas en ese estado.
 
+Colas de prioridad: `task.queue` declarada con `x-max-priority=10`. `POST /tasks` acepta un campo opcional `priority` (0-10, default 0 si no se manda) que se setea en el mensaje vía `MessagePostProcessor` al publicar. Con varios mensajes esperando en la cola, RabbitMQ entrega primero los de mayor prioridad — no reordena mensajes ya entregados ni afecta tareas que llegan cuando la cola está vacía.
+
 ## Cómo levantarlo
 
 ```bash
@@ -38,7 +40,7 @@ RabbitMQ management UI: http://localhost:15672 (`guest`/`guest`)
 ```bash
 curl -X POST http://localhost:8080/tasks \
   -H "Content-Type: application/json" \
-  -d '{"type": "demo", "payload": "hello"}'
+  -d '{"type": "demo", "payload": "hello", "priority": 8}'
 ```
 
 ## Estado
@@ -49,7 +51,7 @@ Proyecto en curso, construido objetivo por objetivo:
 - [x] **Objetivo 2** — Worker que consume y procesa
 - [x] **Objetivo 3** — Reintentos con backoff exponencial
 - [x] **Objetivo 4** — Dead Letter Queue
-- [ ] **Objetivo 5** — Colas de prioridad *(en curso)*
+- [x] **Objetivo 5** — Colas de prioridad *(implementado, confirmando en vivo)*
 - [ ] **Objetivo 6** — Tareas programadas
 - [ ] **Objetivo 7** — Endpoint de consulta de estado
 - [ ] **Objetivo 8** — Dockerizar todo el sistema (API + worker + broker)

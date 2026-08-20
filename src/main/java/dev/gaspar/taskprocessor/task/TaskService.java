@@ -21,7 +21,10 @@ public class TaskService {
     public TaskResponse createTask(CreateTaskRequest req){
         Task task = new Task(UUID.randomUUID(), Instant.now(), req.payload(), TaskStatus.PENDING, req.type());
         repository.save(task);
-        rabbitTemplate.convertAndSend(TaskQueueConfig.EXCHANGE_NAME, TaskQueueConfig.ROUTING_KEY, task.getId().toString());
+        rabbitTemplate.convertAndSend(TaskQueueConfig.EXCHANGE_NAME, TaskQueueConfig.ROUTING_KEY, task.getId().toString(), message -> {
+            message.getMessageProperties().setPriority(req.priority());
+            return message;
+        });
         return new TaskResponse(task.getId(), task.getStatus(), task.getCreatedAt(), task.getResult());
     }
     public void publishRetry (Task task) {

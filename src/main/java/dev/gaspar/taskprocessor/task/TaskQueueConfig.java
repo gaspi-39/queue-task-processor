@@ -20,7 +20,8 @@ public class TaskQueueConfig {
     }
     @Bean
     public Queue createQueue(){
-        return new Queue(QUEUE_NAME);
+        Queue queue = QueueBuilder.durable(QUEUE_NAME).withArgument("x-max-priority", 10).build();
+        return queue;
     }
     @Bean
     public Queue createDlqQueue(){
