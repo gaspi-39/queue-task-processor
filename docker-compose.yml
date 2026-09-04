@@ -11,7 +11,7 @@ services:
       - pg-data:/var/lib/postgresql/data
 
   rabbitmq:
-    image: rabbitmq:3-management-alpine
+    image: heidiks/rabbitmq-delayed-message-exchange:latest
     ports:
       - "5672:5672"   # AMQP (lo usa la app)
       - "15672:15672" # UI de management (http://localhost:15672, guest/guest)
