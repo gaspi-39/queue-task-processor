@@ -22,6 +22,7 @@ public class Task {
     private String result;
     @Nullable
     private Integer tries;
+    private Instant scheduleFor;
 
     protected Task(){}
     public Task(UUID id, Instant createdAt, String payload, TaskStatus status, String type){
@@ -53,6 +54,12 @@ public class Task {
     public Integer getTries() {
         return tries;
     }
+    public Instant getScheduleFor() {
+      return this.scheduleFor;
+    }
+    public void setScheduleFor(Instant schedule) {
+      this.scheduleFor = schedule;
+    }
     public void setTries(int tries) {
         this.tries = tries;
     }
@@ -67,4 +74,5 @@ public class Task {
         this.status = TaskStatus.FAILED;
         this.result = error;
     }
+
 }

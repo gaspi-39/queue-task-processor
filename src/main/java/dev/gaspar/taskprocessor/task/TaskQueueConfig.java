@@ -1,6 +1,9 @@
 package dev.gaspar.taskprocessor.task;
+import java.util.Map;
+
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.CustomExchange;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
@@ -14,6 +17,7 @@ public class TaskQueueConfig {
     public static final String QUEUE_NAME = "task.queue";
     public static final String RETRY_QUEUE_NAME = "task.retry";
     public static final String DLQ_QUEUE_NAME = "task.dlq";
+    public static final String SCHEDULE_EXCHANGE_NAME = "task.delayed.exchange";
     @Bean
     public DirectExchange createDirectExchange(){
         return new DirectExchange(EXCHANGE_NAME); 
@@ -22,6 +26,10 @@ public class TaskQueueConfig {
     public Queue createQueue(){
         Queue queue = QueueBuilder.durable(QUEUE_NAME).withArgument("x-max-priority", 10).build();
         return queue;
+    }
+    @Bean
+    public Binding createBinding(Queue createQueue, DirectExchange exchange){
+        return BindingBuilder.bind(createQueue).to(exchange).with(ROUTING_KEY);
     }
     @Bean
     public Queue createDlqQueue(){
@@ -33,7 +41,14 @@ public class TaskQueueConfig {
         return queue;
     }
     @Bean
-    public Binding createBinding(Queue createQueue, DirectExchange exchange){
-        return BindingBuilder.bind(createQueue).to(exchange).with(ROUTING_KEY);
+    public CustomExchange createDelayedExchange() {
+        CustomExchange exchange = new CustomExchange(SCHEDULE_EXCHANGE_NAME, "x-delayed-message", true, false, Map.of("x-delayed-type", "direct"));
+        return exchange;
     }
+    @Bean
+    public Binding createDelayedBinding(Queue createQueue, CustomExchange customExchange) {
+        return BindingBuilder.bind(createQueue).to(customExchange).with(ROUTING_KEY).noargs();
+    }
+      
+
 }
