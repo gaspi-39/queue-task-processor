@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import dev.gaspar.taskprocessor.task.dto.CreateTaskRequest;
+import dev.gaspar.taskprocessor.task.dto.ScheduleTaskRequest;
 import dev.gaspar.taskprocessor.task.dto.TaskResponse;
 import jakarta.validation.Valid;
 
@@ -16,14 +17,20 @@ import jakarta.validation.Valid;
 public class TaskController {
     private final TaskService service;
 
-    public TaskController(TaskService service){
+    public TaskController(TaskService service) {
         this.service = service;
     }
 
     @PostMapping("/tasks")
-    public ResponseEntity<TaskResponse> createTask(@Valid @RequestBody CreateTaskRequest req){
+    public ResponseEntity<TaskResponse> createTask(@Valid @RequestBody CreateTaskRequest req) {
         return ResponseEntity.accepted().body(service.createTask(req));
     }
+
+    @PostMapping("/tasks/schedule")
+    public ResponseEntity<TaskResponse> scheduleTask(@Valid @RequestBody ScheduleTaskRequest req) {
+      return ResponseEntity.accepted().body(service.scheduleTask(req));
+    }
+
     @GetMapping("/tasks/failed")
     public ResponseEntity<List<TaskResponse>> getFailed(){
         return ResponseEntity.ok().body(service.getByStatus(TaskStatus.FAILED));
