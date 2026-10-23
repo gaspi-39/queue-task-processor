@@ -1,4 +1,4 @@
-package dev.gaspar.taskprocessor.task.dto
+package dev.gaspar.taskprocessor.task.dto;
 import java.time.Instant;
 
 import jakarta.validation.constraints.Future;
