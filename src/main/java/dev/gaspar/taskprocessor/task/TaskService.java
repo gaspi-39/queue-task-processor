@@ -4,8 +4,11 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import dev.gaspar.taskprocessor.task.dto.CreateTaskRequest;
 import dev.gaspar.taskprocessor.task.dto.ScheduleTaskRequest;
@@ -39,7 +42,7 @@ public class TaskService {
     public void publishDlq(Task task){
         rabbitTemplate.convertAndSend("", TaskQueueConfig.DLQ_QUEUE_NAME, task.getId().toString());
     }
-    public TaskResponse publishSchedule(ScheduleTaskRequest req) {
+    public TaskResponse scheduleTask(ScheduleTaskRequest req) {
         long delayMs = Duration.between(Instant.now(), req.scheduleFor()).toMillis();
         if (delayMs < 0) {
           throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "executeAt must be in the future");
@@ -49,12 +52,12 @@ public class TaskService {
           throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "executeAt exceeds the maximum delay");
         }
 
-        Task task = new Task(UUID.randomUUID(), Instant.now, req.payload(), TaskStatus.PENDING, req.type);
+        Task task = new Task(UUID.randomUUID(), Instant.now(), req.payload(), TaskStatus.PENDING, req.type());
         task.setScheduleFor(req.scheduleFor());
         repository.save(task);
         rabbitTemplate.convertAndSend(TaskQueueConfig.SCHEDULE_EXCHANGE_NAME, TaskQueueConfig.ROUTING_KEY, task.getId().toString(), message -> {
-          message.getMessageProperties().setDelayLong(delayMs)
-            return message
+          message.getMessageProperties().setDelayLong(delayMs);
+            return message;
         });
 
         return new TaskResponse(task.getId(), task.getStatus(), task.getCreatedAt(), task.getResult());
